@@ -1,3 +1,4 @@
+import Data.ByteString (find)
 type Position = (Int, Int, Int) --Type where the first int is 'X' position, the second is 'Y' position and the third is the piece
                                 --if the third int is '0' theres no piece, if '1' the piece belongs to player 1 and '2' is players 2 piece
 createBoard :: Int -> Int -> [[Position]] --create the board with no pieces placed
@@ -11,11 +12,12 @@ printBoard board = mapM_ putStrLn $ map (concatMap showPosition) board
     showPosition (_, _, 2) = "O " --players 2 piece
 
 -- Function to update the board with the player's move
-updateBoard :: [[Position]] -> Int -> Int -> Int -> [[Position]]
-updateBoard board x y player = take y board ++ [updatedRow] ++ drop (y+1) board
+updateBoard :: [[Position]] -> Int -> Int -> [[Position]]
+updateBoard board x player = take row board ++ [updatedRow] ++ drop (row+1) board
   where
-    updatedRow = take x row ++ [(x, y, player)] ++ drop (x+1) row
-    row = board !! y
+    row = findEmptyRow board x
+    updatedRow = take x (board !! row) ++ [(x, row, player)] ++ drop (x+1) (board !! row)
+
 
 findEmptyRow :: [[Position]] -> Int -> Int
 findEmptyRow board col = length colPositions - 1 - length (takeWhile (\(_,_,piece) -> piece /= 0) (reverse colPositions))
@@ -33,12 +35,12 @@ main = do
     column <- getLine
     let x = read column :: Int
 
-    let updatedBoard = updateBoard board x (findEmptyRow board x) 1--testa colocar a primeira peça
-    putStrLn "Updated Board:"--TODO? esse findEmptyRow acho q da pra deixar na prorpia funcao updateBoard, mais prático
+    let updatedBoard = updateBoard board x 1--testa colocar a primeira peça
+    putStrLn "Updated Board:"
     printBoard updatedBoard
 
-    let updatedBoard2 = updateBoard updatedBoard x (findEmptyRow updatedBoard x) 1--testa colocar um segunda peça encima da primeira
+    let updatedBoardDOIS = updateBoard updatedBoard x 1--testa colocar um segunda peça encima da primeira
     putStrLn "Updated Board2:"
-    printBoard updatedBoard2
+    printBoard updatedBoardDOIS
 
---TODO: TURNO, LINHA 37, CONDICAO DE VITORIA, COMENTARIOS deixar bunitinho
+--TODO: TURNO, CONDICAO DE VITORIA, USER ERROR ex: X = -2, COMENTARIOS deixar bunitinho
