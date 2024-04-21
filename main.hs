@@ -2,7 +2,8 @@ import Data.ByteString (find)
 import Data.Char
 type Position = (Int, Int, Int) --Type where the first int is 'X' position, the second is 'Y' position and the third is the piece
                                 --if the third int is '0' theres no piece, if '1' the piece belongs to player 1 and '2' is players 2 piece
-createBoard :: Int -> Int -> [[Position]] --create the board with no pieces placed
+
+createBoard :: Int -> Int -> [[Position]] --create the board with no pieces placed using the numbers of rows and columns given
 createBoard numRows numCols = replicate numRows $ replicate numCols (0, 0, 0)
 
 getPosition :: [[Position]] -> Int -> Int -> Int
@@ -22,11 +23,12 @@ updateBoard board col player = (take row board ++ [updatedRow] ++ drop (row+1) b
     row = findEmptyRow board col
     updatedRow = take col (board !! row) ++ [(col, row, player)] ++ drop (col+1) (board !! row)
 
+-- Checks the first available row of a column
 findEmptyRow :: [[Position]] -> Int -> Int
 findEmptyRow board col = length colPositions - 1 - length (takeWhile (\(_,_,piece) -> piece /= 0) (reverse colPositions))
   where colPositions = map (!! col) board
 
--- Verifica se há uma sequência vencedora a partir de uma posição específica
+-- Checks if there is a winning sequence from the given position
 checkSequence :: [[Position]] -> Int -> Int -> Int -> Int -> Bool
 checkSequence board row col dx dy =
   let player = getPosition board row col
@@ -41,7 +43,7 @@ checkSequence board row col dx dy =
 
   in countSequence row col 0
 
--- Verifica se há uma vitória a partir de uma posição específica em todas as direções
+-- Checks if there is a winnig sequence, verifiying all directions from a specific position
 checkWin :: [[Position]] -> Int -> Int -> Bool
 checkWin board row col =
   any (uncurry (checkSequence board row col)) directions
@@ -50,36 +52,28 @@ checkWin board row col =
 
 main :: IO ()
 main = do
-    let numRows = 6
+    let numRows = 6 --these are the original board dimensions
         numCols = 7
         board = createBoard numRows numCols
-    putStrLn "Initial Board:"
+    putStrLn "Initial Board:" --print the initial, empty, board
     printBoard board
 
     let loop board player = do
           putStrLn $ "Player " ++ show player ++ "'s turn. Enter your move (column number):"
-          column <- getLine
+          column <- getLine --gets the column the player wants to place a piece
           let col = read column :: Int
 
-          let (updatedBoard, row) = updateBoard board col player
+          let (updatedBoard, row) = updateBoard board col player --updates the board with the new piece
           putStrLn "Updated Board:"
           printBoard updatedBoard
 
-          putStrLn $ "row: " ++ [chr (row + ord '0')]
+          putStrLn $ "row: " ++ [chr (row + ord '0')] --shows the row and column the piece was placed
           putStrLn $ "col: " ++ [chr (col + ord '0')]
 
-          if checkWin updatedBoard row col
+          if checkWin updatedBoard row col --checks if the new piece wins the game
             then putStrLn $ "Player " ++ show player ++ " wins!"
-            else if all (all (\(_, _, piece) -> piece /= 0)) updatedBoard
+            else if all (all (\(_, _, piece) -> piece /= 0)) updatedBoard --if the board is full thegame ends with a draw
               then putStrLn "It's a draw!"
               else loop updatedBoard (if player == 1 then 2 else 1)
 
     loop board 1
-
-
-
-    -- let updatedBoardDOIS = updateBoard updatedBoard x 1 --Testa colocar um segunda peça encima da primeira
-    -- putStrLn "Updated Board2:"
-    -- printBoard updatedBoardDOIS
-
---TODO: TURNO, CONDICAO DE VITORIA, USER ERROR ex: X = -2, COMENTARIOS deixar bunitinho
